@@ -11,3 +11,14 @@
 - Cron job: Python
 - Database: MongoDB
 - Web Front: Vue JS + Nginx
+
+## Resource
+- https://ods.railway.gov.tw/tra-ods-web/ods/download/dataResource/railway_schedule/JSON/list
+- https://superiorapis.cteam.com.tw/premium?q=%E9%90%B5%E8%B7%AF
+
+
+## TODO
+- API development
+- Infra docker compose development
+- Web frontend development
+- Crawler script developement
