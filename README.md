@@ -3,7 +3,8 @@
 
 
 ## System Design
-![image](https://github.com/user-attachments/assets/dd4c0934-533f-45b1-add8-a36211f2795f)
+<img width="496" alt="截圖 2024-12-29 16 07 10" src="https://github.com/user-attachments/assets/5ad6c270-b8de-4ed8-94eb-c6ade16e5187" />
+
 
 ## Tech Stack
 - API layer: Python + FastAPI
