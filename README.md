@@ -40,3 +40,11 @@
 - Input start & end station id
 - Intersect all the train id from start station and end station
 - Use `Order` to check the LineDir
+
+
+## Docker Compose Setup
+```sh
+docker compose up -d
+```
+
+Use this command to setup mongodb
