@@ -2,17 +2,12 @@ import hashlib
 import re
 import requests
 from pathlib import Path
-import schedule
-import threading
-import time
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 # Configuration
 LISTING_URL = "https://ods.railway.gov.tw/tra-ods-web/ods/download/dataResource/railway_schedule/JSON/list"
 BASE_URL = "https://ods.railway.gov.tw"
-DB_FOLDER = Path("db")
-
-# Ensure the db folder exists
-DB_FOLDER.mkdir(exist_ok=True)
 
 def fetch_file_list():
     """
@@ -55,15 +50,15 @@ def compute_md5(content: bytes) -> str:
     """
     return hashlib.md5(content).hexdigest()
 
-def save_file(content: bytes, date: str):
+def save_file(content: bytes, date: str, db_folder: Path):
     """
-    Save the JSON file to the local `db/` folder.
+    Save the JSON file to the specified folder.
     """
-    file_path = DB_FOLDER / f"{date}.json"
+    file_path = db_folder / f"{date}.json"
     with open(file_path, "wb") as f:
         f.write(content)
 
-def run_for_all(force: bool = False):
+def run_for_all(db_folder: Path, force: bool = False):
     """
     Download all files listed on the HTML page, skipping identical ones unless forced.
     """
@@ -82,7 +77,7 @@ def run_for_all(force: bool = False):
             continue
 
         new_hash = compute_md5(json_content)
-        file_path = DB_FOLDER / f"{file_date}.json"
+        file_path = db_folder / f"{file_date}.json"
 
         # Check if the file exists and skip if not forcing
         if file_path.exists() and not force:
@@ -93,12 +88,12 @@ def run_for_all(force: bool = False):
                 continue
 
         # Save the file if new or forcing
-        save_file(json_content, file_date)
+        save_file(json_content, file_date, db_folder)
         downloaded_files.append(file_date)
 
     print(f"Downloaded files: {downloaded_files}")
 
-def run_for_date(file_date: str, force: bool = False):
+def run_for_date(file_date: str, db_folder: Path, force: bool = False):
     """
     Download a specific file for the given date, skipping if identical unless forced.
     """
@@ -117,7 +112,7 @@ def run_for_date(file_date: str, force: bool = False):
                 return
 
             new_hash = compute_md5(json_content)
-            file_path = DB_FOLDER / f"{file_date}.json"
+            file_path = db_folder / f"{file_date}.json"
 
             # Check if the file exists and skip if not forcing
             if file_path.exists() and not force:
@@ -128,49 +123,50 @@ def run_for_date(file_date: str, force: bool = False):
                     return
 
             # Save the file if new or forcing
-            save_file(json_content, file_date)
+            save_file(json_content, file_date, db_folder)
             print(f"Downloaded and saved: {file_date}.json")
             return
 
     print(f"File for date {file_date} not found on the page.")
 
-def schedule_jobs():
+def schedule_jobs(db_folder: Path):
     """
-    Schedule the crawler to run at specific times.
+    Schedule the crawler to run at specific times using BackgroundScheduler.
     """
+    scheduler = BackgroundScheduler()
+
     # Schedule to download all files at 06:00 and 18:00 daily
-    schedule.every().day.at("06:00").do(run_for_all, force=False)
-    schedule.every().day.at("18:00").do(run_for_all, force=False)
+    scheduler.add_job(run_for_all, CronTrigger(hour=6, minute=0), kwargs={"db_folder": db_folder, "force": False})
+    scheduler.add_job(run_for_all, CronTrigger(hour=18, minute=0), kwargs={"db_folder": db_folder, "force": False})
 
-    def run_scheduler():
-        while True:
-            schedule.run_pending()
-            time.sleep(1)
-
-    # Run the scheduler in a separate thread
-    threading.Thread(target=run_scheduler, daemon=True).start()
+    # Start the scheduler
+    scheduler.start()
+    print("Scheduler started in the background.")
 
 if __name__ == "__main__":
     import argparse
 
+    # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Crawler for JSON files")
     parser.add_argument("--date", help="Specific date to download (YYYYMMDD)")
     parser.add_argument("--force", action="store_true", help="Force download even if the file exists and is identical")
     parser.add_argument("--all", action="store_true", help="Download all files listed on the page")
     parser.add_argument("--schedule", action="store_true", help="Run the crawler on a schedule")
+    parser.add_argument("--db-folder", default="db", help="Directory to save JSON files (default: db)")
     args = parser.parse_args()
+
+    # Set up the database folder
+    db_folder = Path(args.db_folder)
+    db_folder.mkdir(exist_ok=True)
 
     if args.schedule:
         # Run the scheduler
-        schedule_jobs()
-        print("Scheduler is running. Press Ctrl+C to stop.")
-        while True:
-            time.sleep(1)
+        schedule_jobs(db_folder)
     elif args.all:
-        # Force download all files
-        run_for_all(force=args.force)
+        # Download all files
+        run_for_all(db_folder, force=args.force)
     elif args.date:
-        # Force download for a specific date
-        run_for_date(args.date, force=args.force)
+        # Download a specific file
+        run_for_date(args.date, db_folder, force=args.force)
     else:
         print("Please specify --date, --all, or --schedule.")

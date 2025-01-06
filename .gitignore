@@ -169,3 +169,10 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Ignore macOS .DS_Store files
+.DS_Store
+
+# Ignore everything inside the db/ directory
+src/api/db/
+src/api/temp/
