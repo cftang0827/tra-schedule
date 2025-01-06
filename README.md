@@ -22,3 +22,21 @@
 - Infra docker compose development
 - Web frontend development
 - Crawler script developement
+
+## DB data schema
+```json
+{
+    "Route": "",
+    "Station": "0990",
+    "Order": "6",
+    "DEPTime": "16:50:00",
+    "ARRTime": "16:49:00",
+    "Train": "2551",
+    "Date": "20250225",
+    "LineDir": "1"
+}
+```
+
+- Input start & end station id
+- Intersect all the train id from start station and end station
+- Use `Order` to check the LineDir
