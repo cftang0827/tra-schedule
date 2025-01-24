@@ -1,13 +1,37 @@
-version: '3.8'
+version: '3.9'
 
 services:
   db:
-    image: mongo:5.0
-    container_name: mongodb
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: train_schedule
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpassword
     ports:
-      - "27017:27017"
+      - "3306:3306"
     volumes:
-      - mongo_data:/data/db
+      - db_data:/var/lib/mysql
+      - ./init_schema.sql:/docker-entrypoint-initdb.d/init_schema.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastapi-app
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
-  mongo_data:
+  db_data:

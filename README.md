@@ -18,8 +18,8 @@
 
 
 ## TODO
-- API development
-- Infra docker compose development
+- API development (done!)
+- Infra docker compose development (Functionality done. Awaiting efficiency and clarity update.)
 - Web frontend development
 - Crawler script developement
 
@@ -44,7 +44,10 @@
 
 ## Docker Compose Setup
 ```sh
-docker compose up -d
+docker compose up --build
 ```
 
-Use this command to setup mongodb
+## Use of API (Example command)
+```sh
+curl "http://localhost:8000/timetable/?departure_station=1000&arrival_station=1020&travel_day=2025-01-30&travel_time=04:06:00" | jq .
+```
