@@ -25,5 +25,6 @@ CREATE TABLE train_schedule (
     dep_time DATETIME,
     arr_time DATETIME,
     route_station VARCHAR(10),
-    created_at DATETIME
+    created_at DATETIME,
+    UNIQUE (train_code, station, arr_time)
 );
