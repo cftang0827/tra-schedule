@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+apscheduler
+requests
+mysql-connector-python
+pathlib
+argparse
