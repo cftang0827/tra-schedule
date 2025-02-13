@@ -19,4 +19,4 @@ ENV PYTHONPATH=/app/src
 EXPOSE 8000
 
 # Run the data loading script before starting the FastAPI app
-CMD ["sh", "-c", "python src/api/load_data.py && uvicorn api.main:app --host 0.0.0.0 --port 8000","--log-level", "warning"]
+CMD ["sh", "-c", "uvicorn api.main:app --host 0.0.0.0 --port 8000","--log-level", "warning"]
