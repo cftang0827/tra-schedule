@@ -8,7 +8,7 @@ from apscheduler.triggers.cron import CronTrigger
 # Configuration
 LISTING_URL = "https://ods.railway.gov.tw/tra-ods-web/ods/download/dataResource/railway_schedule/JSON/list"
 BASE_URL = "https://ods.railway.gov.tw"
-HASH_LOG_FILE = Path("src/api/hash_log.txt")  # Path for the hash log file
+HASH_LOG_FILE = Path("./api/hash_log.txt")  # Path for the hash log file
 
 
 def fetch_file_list():
