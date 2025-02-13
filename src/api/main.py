@@ -9,16 +9,17 @@ from typing import List
 from datetime import datetime, timedelta
 import mysql.connector
 import time
+import os
 
 app = FastAPI()
 DB_FOLDER = Path(__file__).parent / "db"
 
 # MySQL connection configuration
 db_config = {
-    "user": "user",  # Replace with your MySQL username
-    "password": "userpassword",  # Replace with your MySQL password
-    "host": "db",  # The service name in docker-compose.yml
-    "database": "train_schedule"
+    "user": os.getenv("DB_USER"),  # Replace with your MySQL username
+    "password": os.getenv("DB_PASSWORD"),  # Replace with your MySQL password
+    "host": os.getenv("DB_HOST", "localhost"),  # The service name in docker-compose.yml
+    "database": os.getenv("DB_DATABASE", "train_schedule")
 }
 
 
@@ -112,6 +113,7 @@ async def get_timetable(
             WHERE station = %s
             AND DATE(arr_time) = %s
             AND TIME(arr_time) >= %s
+            AND DATE(created_at) = CURDATE()
         ),
         locate_rows_by_code_and_arr_station AS (
             SELECT ts.*

@@ -4,14 +4,15 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
+import os
 
 
 # Database configuration
 db_config = {
-    "user": "user",
-    "password": "userpassword",
-    "host": "db",
-    "database": "train_schedule"
+    "user": os.getenv("DB_USER"),  # Replace with your MySQL username
+    "password": os.getenv("DB_PASSWORD"),  # Replace with your MySQL password
+    "host": os.getenv("DB_HOST", "localhost"),  # The service name in docker-compose.yml
+    "database": os.getenv("DB_DATABASE", "train_schedule")
 }
 
 def batch_insert_to_db(data, db_config):
