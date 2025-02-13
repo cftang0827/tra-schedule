@@ -25,6 +25,11 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: fastapi-app
+    environment:
+      - DB_HOST: db
+      - DB_PASSWORD: userpassword
+      - DB_USER: user
+      - DB_DATABASE: train_schedule
     ports:
       - "8000:8000"
     volumes:
