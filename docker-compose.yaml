@@ -12,7 +12,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - db_data:/var/lib/mysql
+      - ./db_data:/var/lib/mysql
       - ./init_schema.sql:/docker-entrypoint-initdb.d/init_schema.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
@@ -25,13 +25,16 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: fastapi-app
+    environment:
+      DB_HOST: db
+      DB_PASSWORD: userpassword
+      DB_USER: user
+      DB_DATABASE: train_schedule
     ports:
-      - "8000:8000"
+      - "6000:6000"
     volumes:
       - .:/app
     depends_on:
       db:
         condition: service_healthy
 
-volumes:
-  db_data:

@@ -50,8 +50,6 @@ docker-compose up --build
 # Terminate docker cont.
 docker-compose down
 
-# Clean DB
-docker volume rm tra-schedule_db_data
 ```
 
 ## Use of API (Example command)
