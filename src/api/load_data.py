@@ -29,7 +29,7 @@ def batch_insert_to_db(data, db_config):
         dinning, food_srv, cripple, car_class, bike, extra_train, everyday, note, note_eng,
         station, order_in_trip, dep_time, arr_time, route_station, created_at
     ) VALUES 
-    """ + ", ".join(["(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())"] * len(data))
+    """ + ", ".join(["(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURDATE() )"] * len(data))
 
     # Flatten the data list for the query
     flat_data = [item for sublist in data for item in sublist]
@@ -148,6 +148,6 @@ def schedule_load_jobs(db_folder: Path, db_config):
     print("Load scheduler started in the background.")
 
 
-if __name__ == "__main__":
-    db_folder = "/app/src/api/db"  # Adjust the path as necessary
-    process_all_jsons(db_folder, db_config)
+# if __name__ == "__main__":
+#     db_folder = "/app/src/api/db"  # Adjust the path as necessary
+#     process_all_jsons(db_folder, db_config)

@@ -8,11 +8,10 @@ from fastapi import Query
 from typing import List
 from datetime import datetime, timedelta
 import mysql.connector
-import time
 import os
+from contextlib import asynccontextmanager
 
-app = FastAPI()
-DB_FOLDER = Path(__file__).parent / "db"
+DB_FOLDER = Path("db")
 
 # MySQL connection configuration
 db_config = {
@@ -22,9 +21,13 @@ db_config = {
     "database": os.getenv("DB_DATABASE", "train_schedule")
 }
 
+# Connect to the database
+conn = mysql.connector.connect(**db_config)
+cursor = conn.cursor(dictionary=True)
 
-@app.on_event("startup")
-def startup_event():
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     """
     Initialize the application and start both the crawler and load schedulers.
     """
@@ -43,6 +46,13 @@ def startup_event():
     print("Starting init SQL DB loading of all jsons inside db/")
     process_all_jsons(db_folder=DB_FOLDER, db_config=db_config)
 
+    yield
+
+    print("Release mysql connection handler")
+    cursor.close()
+    conn.close()
+
+app = FastAPI(lifespan=lifespan)
 
 @app.get("/json/{date}")
 async def get_json(date: str):
@@ -71,23 +81,23 @@ async def get_json(date: str):
 
 
 
-@app.get("/force-download")
-async def force_download(file_date: str = None):
-    """
-    Trigger a manual force-download for all files or a specific file.
-    """
-    if file_date:
-        # Download for a specific date
-        run_for_date(file_date, db_folder=DB_FOLDER, force=True)
-        return {"message": f"Force download completed for date {file_date}"}
-    else:
-        # Download for all files
-        run_for_all(db_folder=DB_FOLDER, force=True)
-        return {"message": "Force download completed for all files"}
+# @app.get("/force-download")
+# async def force_download(file_date: str = None):
+#     """
+#     Trigger a manual force-download for all files or a specific file.
+#     """
+#     if file_date:
+#         # Download for a specific date
+#         run_for_date(file_date, db_folder=DB_FOLDER, force=True)
+#         return {"message": f"Force download completed for date {file_date}"}
+#     else:
+#         # Download for all files
+#         run_for_all(db_folder=DB_FOLDER, force=True)
+#         return {"message": "Force download completed for all files"}
 
 
 
-@app.get("/timetable/")
+@app.get("/timetable")
 async def get_timetable(
     departure_station: str,
     arrival_station: str,
@@ -101,10 +111,6 @@ async def get_timetable(
         # Parse the departure_time
         #departure_datetime = datetime.strptime(departure_time, "%Y-%m-%d %H:%M:%S")
 
-        # Connect to the database
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor(dictionary=True)
-
         # SQL query to fetch trains departing after the specified time
         query = """
         WITH locate_code_by_dept_station_and_travel_time AS (
@@ -113,7 +119,7 @@ async def get_timetable(
             WHERE station = %s
             AND DATE(arr_time) = %s
             AND TIME(arr_time) >= %s
-            AND DATE(created_at) = CURDATE()
+            AND created_at = CURDATE()
         ),
         locate_rows_by_code_and_arr_station AS (
             SELECT ts.*
@@ -141,9 +147,6 @@ async def get_timetable(
 
         # Fetch results
         results = cursor.fetchall()
-
-        cursor.close()
-        conn.close()
 
         return results
 
