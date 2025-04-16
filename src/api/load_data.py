@@ -107,6 +107,28 @@ def remove_duplicates(db_config):
         cursor.close()
         conn.close()
 
+def cleanup_old_data(db_config, days=14):
+    """
+    Remove old data before days.
+    """
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+
+    delete_query = f"""
+        DELETE FROM train_schedule
+        WHERE created_at < CURDATE() - INTERVAL {days} DAY;
+    """
+
+    try:
+        cursor.execute(delete_query)
+        conn.commit()
+        print("Old data removed successfully.")
+    except Exception as e:
+        print(f"Error removing old data: {e}")
+    finally:
+        cursor.close()
+        conn.close()
+
 
 def process_all_jsons(db_folder, db_config):
     """
@@ -131,16 +153,18 @@ def schedule_load_jobs(db_folder: Path, db_config):
     """
     scheduler = BackgroundScheduler()
 
-    # Schedule to load JSONs into the database at 07:30 and 19:30 daily
+    # Schedule to load JSONs into the database at 06:30
     scheduler.add_job(
         process_all_jsons, 
         CronTrigger(hour=6, minute=30), 
         kwargs={"db_folder": db_folder, "db_config": db_config}
     )
+
+    # Schedule delete old datas at 07:00
     scheduler.add_job(
-        process_all_jsons, 
-        CronTrigger(hour=18, minute=30), 
-        kwargs={"db_folder": db_folder, "db_config": db_config}
+        cleanup_old_data, 
+        CronTrigger(hour=7, minute=0), 
+        kwargs={"db_config": db_config, "days": 14}
     )
 
     # Start the scheduler

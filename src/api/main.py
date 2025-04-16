@@ -10,8 +10,23 @@ from datetime import datetime, timedelta
 import mysql.connector
 import os
 from contextlib import asynccontextmanager
+import json
+from bidict import bidict
+from fastapi.middleware.cors import CORSMiddleware
+
+origins = ["*"]
 
 DB_FOLDER = Path("db")
+
+with open("api/files/stations.json", "r") as f:
+    stations_objs = json.load(f)
+
+stations = bidict()
+for s in stations_objs:
+    stations[s["stationName"]] = s["stationCode"]
+
+with open("api/files/cars.json", "r") as f:
+    cars = json.load(f)
 
 # MySQL connection configuration
 db_config = {
@@ -52,7 +67,16 @@ async def lifespan(app: FastAPI):
     cursor.close()
     conn.close()
 
-app = FastAPI(lifespan=lifespan)
+# app = FastAPI(lifespan=lifespan)
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,            # 可以設定 ["*"] 允許全部，但不建議上線用
+    allow_credentials=True,
+    allow_methods=["*"],              # 允許所有 method：GET, POST, PUT, DELETE...
+    allow_headers=["*"],              # 允許所有 headers
+)
 
 @app.get("/json/{date}")
 async def get_json(date: str):
@@ -94,7 +118,18 @@ async def get_json(date: str):
 #         # Download for all files
 #         run_for_all(db_folder=DB_FOLDER, force=True)
 #         return {"message": "Force download completed for all files"}
+@app.get("/stations")
+async def get_stations():
 
+    response = []
+
+    for k, v in stations.items():
+        response.append({
+            "station_name": k,
+            "station_id": v
+        })
+
+    return response
 
 
 @app.get("/timetable")
@@ -113,40 +148,48 @@ async def get_timetable(
 
         # SQL query to fetch trains departing after the specified time
         query = """
-        WITH locate_code_by_dept_station_and_travel_time AS (
-            SELECT train_code, dep_time
+        WITH locate_code_by_arrival_station AS (
+            SELECT train_code, arr_time, dep_time
             FROM train_schedule
             WHERE station = %s
             AND DATE(arr_time) = %s
-            AND TIME(arr_time) >= %s
             AND created_at = CURDATE()
         ),
         locate_rows_by_code_and_arr_station AS (
-            SELECT ts.*
+            SELECT lc.arr_time as lc_arr_time, lc.dep_time as lc_dep_time, ts.*
             FROM train_schedule ts
-            JOIN locate_code_by_dept_station_and_travel_time lc
+            JOIN locate_code_by_arrival_station lc
             ON ts.train_code = lc.train_code
             WHERE ts.station = %s
-            AND DATE(ts.arr_time) = %s
-            AND ts.arr_time > lc.dep_time
+            AND DATE(ts.dep_time) = %s
+            AND TIME(ts.dep_time) >= %s
+            AND ts.dep_time <= lc.arr_time
+            AND TIMESTAMPDIFF(HOUR, ts.dep_time, lc.arr_time) <= 12
         )
         SELECT *
         FROM locate_rows_by_code_and_arr_station
-        ORDER BY arr_time;
+        ORDER BY dep_time;
+
         """
 
         # Execute query
         params = (
+            arrival_station,
+            travel_day,
             departure_station,
             travel_day,
-            travel_time,
-            arrival_station,
-            travel_day
+            travel_time
         )
         cursor.execute(query, params)
 
         # Fetch results
         results = cursor.fetchall()
+
+        # add car name
+        for r in results:
+            car = cars.get(r["car_class"])
+            r["car_name"] = car["name"] if car else None
+            r["car_alias"] = car["alias"] if car else None
 
         return results
 

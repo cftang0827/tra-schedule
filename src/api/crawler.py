@@ -162,9 +162,8 @@ def schedule_jobs(db_folder: Path):
     """
     scheduler = BackgroundScheduler()
 
-    # Schedule to download all files at 06:00 and 18:00 daily
+    # Schedule to download all files at 06:00 daily
     scheduler.add_job(run_for_all, CronTrigger(hour=6, minute=0), kwargs={"db_folder": db_folder, "force": False})
-    scheduler.add_job(run_for_all, CronTrigger(hour=18, minute=0), kwargs={"db_folder": db_folder, "force": False})
 
     # Start the scheduler
     scheduler.start()
