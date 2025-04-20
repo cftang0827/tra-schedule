@@ -162,39 +162,38 @@ def schedule_jobs(db_folder: Path):
     """
     scheduler = BackgroundScheduler()
 
-    # Schedule to download all files at 06:00 and 18:00 daily
+    # Schedule to download all files at 06:00 daily
     scheduler.add_job(run_for_all, CronTrigger(hour=6, minute=0), kwargs={"db_folder": db_folder, "force": False})
-    scheduler.add_job(run_for_all, CronTrigger(hour=18, minute=0), kwargs={"db_folder": db_folder, "force": False})
 
     # Start the scheduler
     scheduler.start()
     print("Scheduler started in the background.")
 
 
-if __name__ == "__main__":
-    import argparse
+# if __name__ == "__main__":
+#     import argparse
 
-    # Parse command-line arguments
-    parser = argparse.ArgumentParser(description="Crawler for JSON files")
-    parser.add_argument("--date", help="Specific date to download (YYYYMMDD)")
-    parser.add_argument("--force", action="store_true", help="Force download even if the file exists and is identical")
-    parser.add_argument("--all", action="store_true", help="Download all files listed on the page")
-    parser.add_argument("--schedule", action="store_true", help="Run the crawler on a schedule")
-    parser.add_argument("--db-folder", default="db", help="Directory to save JSON files (default: db)")
-    args = parser.parse_args()
+#     # Parse command-line arguments
+#     parser = argparse.ArgumentParser(description="Crawler for JSON files")
+#     parser.add_argument("--date", help="Specific date to download (YYYYMMDD)")
+#     parser.add_argument("--force", action="store_true", help="Force download even if the file exists and is identical")
+#     parser.add_argument("--all", action="store_true", help="Download all files listed on the page")
+#     parser.add_argument("--schedule", action="store_true", help="Run the crawler on a schedule")
+#     parser.add_argument("--db-folder", default="db", help="Directory to save JSON files (default: db)")
+#     args = parser.parse_args()
 
-    # Set up the database folder
-    db_folder = Path(args.db_folder)
-    db_folder.mkdir(exist_ok=True)
+#     # Set up the database folder
+#     db_folder = Path(args.db_folder)
+#     db_folder.mkdir(exist_ok=True)
 
-    if args.schedule:
-        # Run the scheduler
-        schedule_jobs(db_folder)
-    elif args.all:
-        # Download all files
-        run_for_all(db_folder, force=args.force)
-    elif args.date:
-        # Download a specific file
-        run_for_date(args.date, db_folder, force=args.force)
-    else:
-        print("Please specify --date, --all, or --schedule.")
+#     if args.schedule:
+#         # Run the scheduler
+#         schedule_jobs(db_folder)
+#     elif args.all:
+#         # Download all files
+#         run_for_all(db_folder, force=args.force)
+#     elif args.date:
+#         # Download a specific file
+#         run_for_date(args.date, db_folder, force=args.force)
+#     else:
+#         print("Please specify --date, --all, or --schedule.")

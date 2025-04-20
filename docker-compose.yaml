@@ -31,7 +31,7 @@ services:
       DB_USER: user
       DB_DATABASE: train_schedule
     ports:
-      - "6000:6000"
+      - "8888:8888"
     volumes:
       - .:/app
     depends_on:

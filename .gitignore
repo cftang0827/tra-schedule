@@ -178,5 +178,6 @@ src/api/db/
 src/api/temp/
 
 hash_log.txt
-*json
+db/*json
 db_data
+db*

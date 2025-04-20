@@ -1,7 +1,6 @@
 # tra-schedule
 
 
-
 ## System Design
 <img width="496" alt="截圖 2024-12-29 16 07 10" src="https://github.com/user-attachments/assets/5ad6c270-b8de-4ed8-94eb-c6ade16e5187" />
 
@@ -56,3 +55,8 @@ docker-compose down
 ```sh
 curl "http://localhost:8000/timetable/?departure_station=1000&arrival_station=1020&travel_day=2025-01-30&travel_time=04:06:00" | jq .
 ```
+
+
+## Ref data
+- https://data.gov.tw/dataset/33425
+- https://ods.railway.gov.tw/tra-ods-web/ods#services
